@@ -1,0 +1,12 @@
+# Directoare generate automat
+build/
+install/
+log/
+
+# Fișiere de configurare ale editorilor de cod
+.vscode/
+.idea/
+
+# Fișiere cache și alte fișiere temporare
+*.pyc
+__pycache__/
