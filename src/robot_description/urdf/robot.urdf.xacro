@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="my_robot">
+
+  <xacro:include filename="gazebo_control.xacro"/>
   
+
   <!-- Definire parametri -->
   <xacro:property name="robot_length" value="0.7"/>
   <xacro:property name="robot_width" value="0.55"/>
@@ -17,10 +20,11 @@
   <xacro:property name="lidar_diameter" value="0.1"/>
 
   <!-- Base footprint: proiecția pe sol -->
-  <link name="base_footprint"/>
+  <link name="base_link">
+  </link>
    
   <!-- Base link: corpul principal al robotului -->
-  <link name="base_link">
+  <link name="base_chassis">
     <visual>
       <origin xyz="0 0 ${robot_height / 2}" rpy="0 0 0"/>
       <geometry>
@@ -47,10 +51,13 @@
 
   <!-- Legătura dintre base_footprint și base_link -->
   <joint name="base_footprint_to_base_link" type="fixed">
-    <parent link="base_footprint"/>
-    <child link="base_link"/>
+    <parent link="base_link"/>
+    <child link="base_chassis"/>
     <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
   </joint>
+  <gazebo reference="base_chassis">
+    <material>Gazebo/Blue</material>
+  </gazebo>
 
   <!-- Roata stângă -->
   <link name="left_wheel">
@@ -76,11 +83,14 @@
   </link>
 
   <joint name="base_to_left_wheel" type="continuous">
-    <parent link="base_link"/>
+    <parent link="base_chassis"/>
     <child link="left_wheel"/>
     <origin xyz="${wheel_offset_x} ${wheel_y_offset} 0" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
   </joint>
+  <gazebo reference="left_wheel">
+    <material>Gazebo/Red</material>
+  </gazebo>
 
   <!-- Roata dreaptă -->
   <link name="right_wheel">
@@ -106,11 +116,14 @@
   </link>
 
   <joint name="base_to_right_wheel" type="continuous">
-    <parent link="base_link"/>
+    <parent link="base_chassis"/>
     <child link="right_wheel"/>
     <origin xyz="${wheel_offset_x} -${wheel_y_offset} 0" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
   </joint>
+  <gazebo reference="right_wheel">
+    <material>Gazebo/Red</material>
+  </gazebo>
   
     <!-- Caster wheel -->
   <link name="caster_wheel">
@@ -140,11 +153,16 @@
 
   <!-- Joint pentru caster wheel -->
   <joint name="base_to_caster_wheel" type="fixed">
-    <parent link="base_link"/>
+    <parent link="base_chassis"/>
     <child link="caster_wheel"/>
     <origin xyz="${caster_offset_x} 0 -${caster_wheel_radius}" rpy="0 0 0"/>
   </joint>
-  
+  <gazebo reference="caster_wheel">
+    <material>Gazebo/Red</material>
+    <mu1 value="0.001"/>
+    <mu2 value="0.001"/>
+  </gazebo>
+
   <!-- Lidar link -->
   <link name="lidar_link">
     <visual>
@@ -172,10 +190,42 @@
   </link>
 
   <joint name="base_to_lidar" type="fixed">
-    <parent link="base_link"/>
+    <parent link="base_chassis"/>
     <child link="lidar_link"/>
     <origin xyz="${caster_offset_x} 0 ${robot_height + lidar_height/2}" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
   </joint>
+
+
+  <gazebo reference="lidar_link">
+    <material>Gazebo/Red</material>
+    <mu1 value="0.001"/>
+     <mu2 value="0.001"/>
+     <sensor name="laser" type="ray">
+        <pose> 0 0 0 0 0 0 </pose>
+        <visualize>true</visualize>
+        <update_rate>10</update_rate>
+        <ray>
+          <scan>
+              <horizontal>
+                <samples>360</samples>
+                <min_angle>-3.14</min_angle>
+                <max_angle>3.14</max_angle>
+              </horizontal>
+          </scan>
+          <range>
+            <min>0.3</min>
+            <max>12</max>
+          </range>
+        </ray>
+        <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
+          <ros>
+            <argument>~/out:=scan</argument>
+          </ros>
+          <output_type>sensor_msgs/LaserScan</output_type>
+          <frame_name>laser_frame</frame_name>
+        </plugin>
+     </sensor>
+    </gazebo>
+
 
 </robot>
